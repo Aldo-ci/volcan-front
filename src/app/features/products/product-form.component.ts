@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { ProductService } from './product.service';
 import { CategoryService, Category } from '../categories/category.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-product-form',
@@ -20,10 +21,16 @@ import { ToastService } from '../../shared/services/toast.service';
     MatInputModule,
     MatSelectModule,
     MatSlideToggleModule,
-    MatButtonModule
+    MatButtonModule,
+    MatIconModule
   ],
   template: `
-    <h2 mat-dialog-title>{{ isEdit ? 'Editar' : 'Nuevo' }} Producto</h2>
+    <div class="flex items-center justify-between p-4 border-b">
+      <h2 class="text-xl font-semibold">{{ isEdit ? 'Editar' : 'Nuevo' }} Producto</h2>
+      <button mat-icon-button (click)="close()" tabindex="-1">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
     <mat-dialog-content class="!pt-4">
       <form [formGroup]="form" class="grid grid-cols-2 gap-4">
         
@@ -124,6 +131,10 @@ export class ProductFormComponent implements OnInit {
     this.categoryService.getAll({ limit: 100, isActive: true }).subscribe(res => {
       this.categories.set(res.data);
     });
+  }
+
+  close() {
+    this.dialogRef.close();
   }
 
   save() {

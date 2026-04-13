@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { UserService } from './user.service';
 import { Role } from '../../core/auth/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-user-form',
@@ -20,11 +21,17 @@ import { ToastService } from '../../shared/services/toast.service';
     MatInputModule,
     MatSelectModule,
     MatSlideToggleModule,
-    MatButtonModule
+    MatButtonModule,
+    MatIconModule
   ],
   template: `
-    <h2 mat-dialog-title>{{ isEdit ? 'Editar' : 'Nuevo' }} Usuario</h2>
-    <mat-dialog-content class="!pt-4">
+    <div class="flex items-center justify-between p-4 border-b">
+      <h2 class="text-xl font-semibold">{{ isEdit ? 'Editar' : 'Nuevo' }} Usuario</h2>
+      <button mat-icon-button (click)="close()" tabindex="-1">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <mat-dialog-content class="pt-4">
       <form [formGroup]="form" class="flex flex-col gap-4 min-w-[300px]">
         
         <mat-form-field appearance="outline">
@@ -86,6 +93,10 @@ export class UserFormComponent implements OnInit {
     this.userService.getRoles().subscribe(roles => {
       this.roles.set(roles);
     });
+  }
+
+  close() {
+    this.dialogRef.close();
   }
 
   save() {

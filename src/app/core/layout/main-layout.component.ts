@@ -19,7 +19,7 @@ import { AuthService } from '../auth/auth.service';
     MatButtonModule
   ],
   template: `
-    <mat-sidenav-container class="h-screen bg-gray-50">
+    <mat-sidenav-container class="h-screen bg-gray-50" autosize>
       <mat-sidenav #sidenav mode="side" opened class="w-64 !bg-white !border-r !border-gray-200">
         <div class="h-16 flex items-center justify-center border-b border-gray-200">
           <span class="text-xl font-bold text-indigo-600">Volcan</span>
