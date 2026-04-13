@@ -41,22 +41,12 @@ export class AuthService {
   readonly isCashier = computed(() => this.currentUserSignal()?.role.code === 'cashier');
 
   login(credentials: any): Observable<LoginResponse> {
-    const mockUser: User = {
-      id: '1',
-      username: credentials.username || 'admin',
-      roleId: '1',
-      role: { id: '1', code: 'admin', name: 'Administrator' },
-      isActive: true
-    };
-    return new Observable<LoginResponse>(subscriber => {
-      setTimeout(() => {
-        const response = { accessToken: 'mock-token', user: mockUser };
+    return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, credentials).pipe(
+      tap(response => {
         this.tokenService.setToken(response.accessToken);
         this.setCurrentUser(response.user);
-        subscriber.next(response);
-        subscriber.complete();
-      }, 500);
-    });
+      })
+    );
   }
 
   logout(): void {

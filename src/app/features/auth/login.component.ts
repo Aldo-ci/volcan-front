@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
@@ -10,7 +10,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-login',
-  standalone: true,
   imports: [
     ReactiveFormsModule,
     MatCardModule,
@@ -20,34 +19,36 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatProgressSpinnerModule
   ],
   template: `
-    <div class="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <mat-card class="w-full max-w-md !rounded-xl !shadow-lg">
-        <mat-card-header class="!pb-4 !pt-6 text-center block">
-          <mat-card-title class="!text-2xl !font-bold !text-gray-800">VolcanApp POS</mat-card-title>
-          <mat-card-subtitle class="!mt-2 !text-gray-500">Ingresa con tus credenciales</mat-card-subtitle>
-        </mat-card-header>
+    <div class="login-container">
+      <mat-card class="login-card">
+        <div class="login-header">
+          <h1 class="login-title">VolcanApp POS</h1>
+          <p class="login-subtitle">Ingresa con tus credenciales</p>
+        </div>
 
-        <mat-card-content class="!px-6">
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+        <mat-card-content>
+          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
             
             @if (errorMsg()) {
-              <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                <span class="block sm:inline">{{ errorMsg() }}</span>
+              <div class="error-alert" role="alert">
+                <span>{{ errorMsg() }}</span>
               </div>
             }
 
-            <mat-form-field appearance="outline" class="w-full">
+            <mat-form-field appearance="outline">
               <mat-label>Usuario</mat-label>
-              <input matInput formControlName="username" type="text" placeholder="Ej. admin" />
+              <input matInput formControlName="username" type="text" placeholder="Ej. admin" autocomplete="username" />
+              <mat-icon matPrefix>person</mat-icon>
               @if (loginForm.controls['username'].hasError('required')) {
                 <mat-error>El usuario es requerido</mat-error>
               }
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="w-full">
+            <mat-form-field appearance="outline">
               <mat-label>Contraseña</mat-label>
-              <input matInput formControlName="password" [type]="hidePassword() ? 'password' : 'text'" />
-              <button mat-icon-button matSuffix (click)="togglePassword($event)" [attr.aria-label]="'Ocultar contraseña'" [attr.aria-pressed]="hidePassword()">
+              <input matInput formControlName="password" [type]="hidePassword() ? 'password' : 'text'" autocomplete="current-password" />
+              <mat-icon matPrefix>lock</mat-icon>
+              <button mat-icon-button matSuffix (click)="togglePassword($event)" type="button" [attr.aria-label]="'Ocultar contraseña'" [attr.aria-pressed]="hidePassword()">
                 <mat-icon>{{hidePassword() ? 'visibility_off' : 'visibility'}}</mat-icon>
               </button>
               @if (loginForm.controls['password'].hasError('required')) {
@@ -55,9 +56,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
               }
             </mat-form-field>
 
-            <button mat-flat-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading()" class="!h-12 !text-base !mt-2">
+            <button mat-flat-button class="login-button" type="submit" [disabled]="loginForm.invalid || isLoading()">
               @if (isLoading()) {
-                <mat-spinner diameter="24" class="inline-block align-middle"></mat-spinner>
+                <mat-spinner diameter="24" color="accent" class="inline-block"></mat-spinner>
               } @else {
                 Iniciar Sesión
               }
@@ -66,7 +67,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         </mat-card-content>
       </mat-card>
     </div>
-  `
+  `,
+  styleUrl: './login.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);

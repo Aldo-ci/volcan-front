@@ -12,7 +12,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   console.log('AuthInterceptor: intercepted request', req.url);
   const token = tokenService.getToken();
-...
+
   // Clone request to add the auth header
   let authReq = req;
   if (token && !req.url.includes('/auth/login') && !req.url.includes('/health')) {

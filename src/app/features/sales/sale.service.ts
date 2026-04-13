@@ -47,29 +47,11 @@ export class SaleService {
   private readonly baseUrl = `${environment.apiUrl}/sales`;
 
   getSummary(params?: { from?: string; to?: string }): Observable<SalesSummary> {
-    return new Observable<SalesSummary>(subscriber => {
-      subscriber.next({
-        totalSold: '15000.50',
-        subtotal: '16000.00',
-        discountTotal: '999.50',
-        tickets: 145,
-        totalUnits: 312
-      });
-      subscriber.complete();
-    });
+    return this.http.get<SalesSummary>(`${this.baseUrl}/summary`, { params });
   }
 
   getAll(params?: any): Observable<PaginatedResponse<Sale>> {
-    return new Observable<PaginatedResponse<Sale>>(subscriber => {
-      subscriber.next({
-        items: [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        totalPages: 0
-      });
-      subscriber.complete();
-    });
+    return this.http.get<PaginatedResponse<Sale>>(this.baseUrl, { params });
   }
 
   getById(id: string): Observable<Sale> {

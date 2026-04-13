@@ -30,43 +30,11 @@ export class ProductService {
   private readonly baseUrl = `${environment.apiUrl}/products`;
 
   getAll(params?: any): Observable<PaginatedResponse<Product>> {
-    return new Observable<PaginatedResponse<Product>>(subscriber => {
-      subscriber.next({
-        items: [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        totalPages: 0
-      });
-      subscriber.complete();
-    });
+    return this.http.get<PaginatedResponse<Product>>(this.baseUrl, { params });
   }
 
   getLowStock(): Observable<Product[]> {
-    return new Observable<Product[]>(subscriber => {
-      subscriber.next([
-        {
-          id: '1',
-          name: 'Producto A',
-          stockQuantity: 5,
-          minimumStock: 10,
-          barcode: '123456',
-          legacyCodigoBarras: null,
-          description: null,
-          imageUrl: null,
-          categoryId: '1',
-          category: { id: '1', name: 'Cat 1', description: null, createdAt: '', updatedAt: '' },
-          regularPrice: '100',
-          salePrice: '90',
-          color: null,
-          size: null,
-          isActive: true,
-          createdAt: '',
-          updatedAt: ''
-        }
-      ]);
-      subscriber.complete();
-    });
+    return this.http.get<Product[]>(`${this.baseUrl}/low-stock`);
   }
 
   getById(id: string): Observable<Product> {

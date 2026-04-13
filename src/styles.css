@@ -2,6 +2,11 @@
 
 @import "@angular/material/prebuilt-themes/indigo-pink.css";
 
+/* Fix for Angular Material / Tailwind 4 border conflict */
+.mdc-notched-outline__notch {
+  border-right: none !important;
+}
+
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
