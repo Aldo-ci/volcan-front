@@ -36,7 +36,7 @@ import { AuthService } from '../../core/auth/auth.service';
           
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef>Fecha</th>
-            <td mat-cell *matCellDef="let element">{{element.occurredAt | date:'short'}}</td>
+            <td mat-cell *matCellDef="let element">{{element.occurredAt | date:'dd/MM/yyyy, hh:mm a'}}</td>
           </ng-container>
 
           <ng-container matColumnDef="id">

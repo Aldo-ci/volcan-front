@@ -20,7 +20,7 @@ import { Sale } from './sale.service';
         </div>
         <div>
           <span class="text-gray-500 block">Fecha</span>
-          <span class="font-medium">{{ sale.occurredAt | date:'medium' }}</span>
+          <span class="font-medium">{{ sale.occurredAt | date:'dd/MM/yyyy, hh:mm a' }}</span>
         </div>
         <div>
           <span class="text-gray-500 block">Estado</span>
@@ -83,7 +83,7 @@ import { Sale } from './sale.service';
       @if(sale.status === 'cancelled') {
         <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded text-sm text-red-800">
           <div class="font-bold">Información de Cancelación:</div>
-          <div>Fecha: {{ sale.cancelledAt | date:'medium' }}</div>
+          <div>Fecha: {{ sale.cancelledAt | date:'dd/MM/yyyy, hh:mm a' }}</div>
           <div>Motivo: {{ sale.cancellationReason }}</div>
         </div>
       }

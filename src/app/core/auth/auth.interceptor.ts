@@ -26,9 +26,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401 && !req.url.includes('/auth/login')) {
-        console.warn('AuthInterceptor: 401 detected but logout disabled for testing');
-        // authService.logout();
-        // router.navigate(['/login']);
+        authService.logout();
+        router.navigate(['/login']);
       }
       return throwError(() => error);
     })
