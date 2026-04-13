@@ -4,7 +4,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs';
 import { Product, ProductService } from '../products/product.service';
 import { PosService } from './pos.service';
 import { ToastService } from '../../shared/services/toast.service';
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, NgOptimizedImage } from '@angular/common';
 
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,6 +19,7 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
   imports: [
     ReactiveFormsModule,
     CurrencyPipe,
+    NgOptimizedImage,
     MatInputModule,
     MatFormFieldModule,
     MatIconModule,
@@ -39,12 +40,18 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 
         <div class="flex-1 overflow-auto grid grid-cols-3 gap-4 pb-4">
           @for (product of products(); track product.id) {
-            <mat-card class="cursor-pointer hover:shadow-lg transition-shadow" (click)="addToCart(product)">
-              <mat-card-content class="!p-4 flex flex-col items-center justify-center text-center h-full">
-                <div class="font-bold text-gray-800 mb-1">{{ product.name }}</div>
-                <div class="text-sm text-gray-500 mb-2">{{ product.barcode || 'N/A' }}</div>
+            <mat-card class="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden" (click)="addToCart(product)">
+              <div class="h-32 bg-gray-50 flex items-center justify-center relative overflow-hidden border-b border-gray-100 p-2">
+                @if (product.imageUrl) {
+                  <img [ngSrc]="product.imageUrl" fill class="object-contain p-2" [alt]="product.name">
+                } @else {
+                  <mat-icon class="!text-gray-300 !text-5xl !w-12 !h-12">image</mat-icon>
+                }
+              </div>
+              <mat-card-content class="!p-3 flex flex-col items-center justify-center text-center h-full">
+                <div class="font-bold text-gray-800 text-sm mb-1 line-clamp-1">{{ product.name }}</div>
                 <div class="font-medium text-indigo-600">{{ product.salePrice | currency }}</div>
-                <div class="text-xs text-gray-400 mt-2">Stock: {{ product.stockQuantity }}</div>
+                <div class="text-[10px] text-gray-400 mt-1">Stock: {{ product.stockQuantity }}</div>
               </mat-card-content>
             </mat-card>
           } @empty {
@@ -64,17 +71,26 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
         <div class="flex-1 overflow-auto p-4 flex flex-col gap-4">
           @for (item of cartItems(); track item.product.id) {
             <div class="flex flex-col gap-2 p-3 border border-gray-200 rounded bg-gray-50">
-              <div class="flex justify-between items-start">
-                <div>
-                  <div class="font-bold text-gray-800">{{ item.product.name }}</div>
-                  <div class="text-xs text-gray-500">Disp: {{ item.product.stockQuantity }}</div>
+              <div class="flex gap-3">
+                @if (item.product.imageUrl) {
+                  <div class="w-12 h-12 rounded border border-gray-200 overflow-hidden flex-shrink-0 relative bg-white p-1">
+                    <img [ngSrc]="item.product.imageUrl" fill class="object-contain p-1" [alt]="item.product.name">
+                  </div>
+                }
+                <div class="flex-1 min-w-0">
+                  <div class="flex justify-between items-start">
+                    <div class="min-w-0">
+                      <div class="font-bold text-gray-800 text-sm truncate">{{ item.product.name }}</div>
+                      <div class="text-[10px] text-gray-500">Disp: {{ item.product.stockQuantity }}</div>
+                    </div>
+                    <button mat-icon-button color="warn" class="!w-6 !h-6 !leading-none flex-shrink-0" (click)="posService.removeItem(item.product.id)">
+                      <mat-icon class="!text-[18px]">delete</mat-icon>
+                    </button>
+                  </div>
                 </div>
-                <button mat-icon-button color="warn" class="!w-6 !h-6 !leading-none" (click)="posService.removeItem(item.product.id)">
-                  <mat-icon class="!text-[18px]">delete</mat-icon>
-                </button>
               </div>
 
-              <div class="flex justify-between items-center mt-2">
+              <div class="flex justify-between items-center mt-1">
                 <div class="flex items-center gap-2">
                   <button mat-icon-button (click)="posService.updateQuantity(item.product.id, item.quantity - 1)">
                     <mat-icon>remove_circle_outline</mat-icon>
@@ -94,10 +110,10 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
                 <mat-button-toggle-group 
                   [value]="item.pricingMode" 
                   (change)="posService.updatePricingMode(item.product.id, $event.value)"
-                  class="w-full mt-2 !h-8"
+                  class="w-full mt-2 !h-10"
                   hideSingleSelectionIndicator>
-                  <mat-button-toggle value="regular" class="w-1/2 text-xs">Normal</mat-button-toggle>
-                  <mat-button-toggle value="sale" class="w-1/2 text-xs">Oferta</mat-button-toggle>
+                  <mat-button-toggle value="regular" class="w-1/2 text-xs flex items-center justify-center">Normal</mat-button-toggle>
+                  <mat-button-toggle value="sale" class="w-1/2 text-xs flex items-center justify-center">Oferta</mat-button-toggle>
                 </mat-button-toggle-group>
               }
             </div>

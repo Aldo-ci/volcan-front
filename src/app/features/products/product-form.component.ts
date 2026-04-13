@@ -67,6 +67,11 @@ import { ToastService } from '../../shared/services/toast.service';
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="col-span-2">
+          <mat-label>URL de la Imagen (Opcional)</mat-label>
+          <input matInput formControlName="imageUrl" type="url" placeholder="https://ejemplo.com/imagen.jpg" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="col-span-2">
           <mat-label>Descripción</mat-label>
           <textarea matInput formControlName="description" rows="2"></textarea>
         </mat-form-field>
@@ -101,13 +106,17 @@ export class ProductFormComponent implements OnInit {
   form = this.fb.group({
     name: [this.data?.product?.name || '', Validators.required],
     barcode: [this.data?.product?.barcode || ''],
-    categoryId: [this.data?.product?.categoryId || '', Validators.required],
+    categoryId: [
+      this.data?.product?.categoryId?.id || this.data?.product?.categoryId || this.data?.product?.category?.id || '',
+      Validators.required
+    ],
     regularPrice: [this.data?.product?.regularPrice || '', [Validators.required, Validators.min(0)]],
     salePrice: [this.data?.product?.salePrice || '', [Validators.min(0)]],
     stockQuantity: [this.data?.product?.stockQuantity || 0, [Validators.required, Validators.min(0)]],
     minimumStock: [this.data?.product?.minimumStock || 0, [Validators.required, Validators.min(0)]],
+    imageUrl: [this.data?.product?.imageUrl || ''],
     description: [this.data?.product?.description || ''],
-    isActive: [this.data?.product?.isActive ?? true]
+    isActive: [this.data.product ? !!this.data?.product?.isActive : true]
   });
 
   ngOnInit() {

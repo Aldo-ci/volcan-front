@@ -22,7 +22,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     <div class="login-container">
       <mat-card class="login-card">
         <div class="login-header">
-          <h1 class="login-title">VolcanApp POS</h1>
+          <h1 class="login-title">Volcan</h1>
           <p class="login-subtitle">Ingresa con tus credenciales</p>
         </div>
 

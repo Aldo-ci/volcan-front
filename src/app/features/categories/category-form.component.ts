@@ -58,7 +58,7 @@ export class CategoryFormComponent {
   form = this.fb.nonNullable.group({
     name: [this.data?.category?.name || '', Validators.required],
     description: [this.data?.category?.description || ''],
-    isActive: [this.data?.category?.isActive ?? true]
+    isActive: [this.data?.category ? !!this.data?.category?.isActive : true]
   });
 
   save() {

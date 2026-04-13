@@ -74,7 +74,7 @@ export class UserFormComponent implements OnInit {
     username: [this.data?.user?.username || '', Validators.required],
     password: [''], // Will be required dynamically if not edit
     roleId: [this.data?.user?.roleId || '', Validators.required],
-    isActive: [this.data?.user?.isActive ?? true]
+    isActive: [this.data?.user ? !!this.data.user.isActive : true]
   });
 
   ngOnInit() {
