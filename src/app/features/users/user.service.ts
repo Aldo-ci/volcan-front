@@ -3,7 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { User, Role } from '../../core/auth/auth.service';
-import { PaginatedResponse } from '../categories/category.service';
+import { PaginatedResponse } from '../../shared/models/paginated-response.model';
+import { fetchAllPages } from '../../shared/utils/fetch-all-pages.util';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -12,6 +13,10 @@ export class UserService {
 
   getAll(params?: any): Observable<PaginatedResponse<User>> {
     return this.http.get<PaginatedResponse<User>>(this.baseUrl, { params });
+  }
+
+  getAllUnpaginated(): Observable<User[]> {
+    return fetchAllPages((params) => this.getAll(params), { limit: 100 });
   }
 
   getRoles(): Observable<Role[]> {

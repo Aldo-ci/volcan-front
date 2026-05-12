@@ -10,6 +10,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
 import { UserFormComponent } from './user-form.component';
 import { ToastService } from '../../shared/services/toast.service';
+import { AuthService } from '../../core/auth/auth.service';
+import { TableExportService } from '../../shared/services/table-export.service';
 
 @Component({
   selector: 'app-users-list',
@@ -26,10 +28,18 @@ import { ToastService } from '../../shared/services/toast.service';
     <div class="space-y-4">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">Usuarios</h1>
-        <button mat-flat-button color="primary" (click)="openDialog()">
-          <mat-icon>person_add</mat-icon>
-          Nuevo Usuario
-        </button>
+        <div class="flex items-center gap-2">
+          @if (authService.isAdmin()) {
+            <button mat-stroked-button color="primary" (click)="exportAsXLSX()">
+              <mat-icon>download</mat-icon>
+              Exportar a Excel
+            </button>
+          }
+          <button mat-flat-button color="primary" (click)="openDialog()">
+            <mat-icon>person_add</mat-icon>
+            Nuevo Usuario
+          </button>
+        </div>
       </div>
 
       <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -104,6 +114,8 @@ export class UsersListComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
+  private readonly tableExportService = inject(TableExportService);
+  readonly authService = inject(AuthService);
 
   users = signal<User[]>([]);
   total = signal(0);
@@ -120,6 +132,21 @@ export class UsersListComponent implements OnInit {
     this.userService.getAll({ page: this.page(), limit: this.limit() }).subscribe(res => {
       this.users.set(res.data);
       this.total.set(res.meta.total);
+    });
+  }
+
+  exportAsXLSX(): void {
+    this.tableExportService.exportRows({
+      rows$: this.userService.getAllUnpaginated(),
+      fileName: 'usuarios',
+      mapRow: (user) => ({
+        Id: user.id,
+        Usuario: user.username,
+        Rol: user.role?.name ?? '',
+        Estado: user.isActive ? 'Activo' : 'Inactivo'
+      }),
+      successMessage: 'Usuarios exportados correctamente.',
+      errorMessage: 'No se pudieron exportar los usuarios.'
     });
   }
 

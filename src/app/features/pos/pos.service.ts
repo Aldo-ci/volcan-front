@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Product } from '../products/product.service';
 import { ToastService } from '../../shared/services/toast.service';
+import { Sale } from '../sales/sale.service';
 
 export interface CartItem {
   product: Product;
@@ -106,7 +107,7 @@ export class PosService {
     this.globalDiscountSignal.set(0);
   }
 
-  checkout(notes: string = ''): Observable<any> {
+  checkout(notes: string = ''): Observable<Sale> {
     const items = this.cartItemsSignal().map(i => ({
       productId: i.product.id,
       quantity: i.quantity,
@@ -120,6 +121,6 @@ export class PosService {
       items
     };
 
-    return this.http.post(`${environment.apiUrl}/sales`, payload);
+    return this.http.post<Sale>(`${environment.apiUrl}/sales`, payload);
   }
 }

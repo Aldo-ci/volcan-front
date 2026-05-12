@@ -2,6 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { PaginatedResponse } from '../../shared/models/paginated-response.model';
+import { fetchAllPages } from '../../shared/utils/fetch-all-pages.util';
 
 export interface Category {
   id: string;
@@ -13,16 +15,6 @@ export interface Category {
   updatedAt: string;
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
 @Injectable({ providedIn: 'root' })
 export class CategoryService {
   private readonly http = inject(HttpClient);
@@ -30,6 +22,10 @@ export class CategoryService {
 
   getAll(params?: { page?: number; limit?: number; search?: string; isActive?: boolean }): Observable<PaginatedResponse<Category>> {
     return this.http.get<PaginatedResponse<Category>>(this.baseUrl, { params: params as any });
+  }
+
+  getAllUnpaginated(): Observable<Category[]> {
+    return fetchAllPages((params) => this.getAll(params), { limit: 100 });
   }
 
   getById(id: string): Observable<Category> {

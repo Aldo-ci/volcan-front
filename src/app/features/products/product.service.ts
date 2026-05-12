@@ -2,7 +2,9 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Category, PaginatedResponse } from '../categories/category.service';
+import { Category } from '../categories/category.service';
+import { PaginatedResponse } from '../../shared/models/paginated-response.model';
+import { fetchAllPages } from '../../shared/utils/fetch-all-pages.util';
 
 export interface Product {
   id: string;
@@ -31,6 +33,10 @@ export class ProductService {
 
   getAll(params?: any): Observable<PaginatedResponse<Product>> {
     return this.http.get<PaginatedResponse<Product>>(this.baseUrl, { params });
+  }
+
+  getAllUnpaginated(): Observable<Product[]> {
+    return fetchAllPages((params) => this.getAll(params), { limit: 100 });
   }
 
   getLowStock(): Observable<Product[]> {

@@ -10,6 +10,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { ProductFormComponent } from './product-form.component';
 import { ToastService } from '../../shared/services/toast.service';
 import { CurrencyPipe } from '@angular/common';
+import { AuthService } from '../../core/auth/auth.service';
+import { TableExportService } from '../../shared/services/table-export.service';
 
 @Component({
   selector: 'app-products-list',
@@ -27,10 +29,18 @@ import { CurrencyPipe } from '@angular/common';
     <div class="space-y-4">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">Productos</h1>
-        <button mat-flat-button color="primary" (click)="openDialog()">
-          <mat-icon>add</mat-icon>
-          Nuevo Producto
-        </button>
+        <div class="flex items-center gap-2">
+          @if (authService.isAdmin()) {
+            <button mat-stroked-button color="primary" (click)="exportAsXLSX()">
+              <mat-icon>download</mat-icon>
+              Exportar a Excel
+            </button>
+          }
+          <button mat-flat-button color="primary" (click)="openDialog()">
+            <mat-icon>add</mat-icon>
+            Nuevo Producto
+          </button>
+        </div>
       </div>
 
       <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -123,6 +133,8 @@ export class ProductsListComponent implements OnInit {
   private readonly productService = inject(ProductService);
   private readonly dialog = inject(MatDialog);
   private readonly toast = inject(ToastService);
+  private readonly tableExportService = inject(TableExportService);
+  readonly authService = inject(AuthService);
 
   products = signal<Product[]>([]);
   total = signal(0);
@@ -139,6 +151,26 @@ export class ProductsListComponent implements OnInit {
     this.productService.getAll({ page: this.page(), limit: this.limit() }).subscribe(res => {
       this.products.set(res.data);
       this.total.set(res.meta.total);
+    });
+  }
+
+  exportAsXLSX(): void {
+    this.tableExportService.exportRows({
+      rows$: this.productService.getAllUnpaginated(),
+      fileName: 'productos',
+      mapRow: (p) => ({
+        Id: p.id,
+        Nombre: p.name,
+        'Código de Barras': p.barcode ?? '',
+        Categoría: p.category?.name ?? '',
+        'Precio Regular': Number(p.regularPrice),
+        'Precio de Venta': Number(p.salePrice),
+        Stock: p.stockQuantity,
+        'Stock Mínimo': p.minimumStock,
+        Estado: p.isActive ? 'Activo' : 'Inactivo'
+      }),
+      successMessage: 'Productos exportados correctamente.',
+      errorMessage: 'No se pudieron exportar los productos.'
     });
   }
 

@@ -7,6 +7,8 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { CategoryFormComponent } from './category-form.component';
+import { AuthService } from '../../core/auth/auth.service';
+import { TableExportService } from '../../shared/services/table-export.service';
 
 @Component({
   selector: 'app-categories-list',
@@ -22,10 +24,18 @@ import { CategoryFormComponent } from './category-form.component';
     <div class="space-y-4">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold text-gray-800">Categorías</h1>
-        <button mat-flat-button color="primary" (click)="openDialog()">
-          <mat-icon>add</mat-icon>
-          Nueva Categoría
-        </button>
+        <div class="flex items-center gap-2">
+          @if (authService.isAdmin()) {
+            <button mat-stroked-button color="primary" (click)="exportAsXLSX()">
+              <mat-icon>download</mat-icon>
+              Exportar a Excel
+            </button>
+          }
+          <button mat-flat-button color="primary" (click)="openDialog()">
+            <mat-icon>add</mat-icon>
+            Nueva Categoría
+          </button>
+        </div>
       </div>
 
       <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -79,6 +89,8 @@ import { CategoryFormComponent } from './category-form.component';
 export class CategoriesListComponent implements OnInit {
   private readonly categoryService = inject(CategoryService);
   private readonly dialog = inject(MatDialog);
+  private readonly tableExportService = inject(TableExportService);
+  readonly authService = inject(AuthService);
 
   categories = signal<Category[]>([]);
   total = signal(0);
@@ -95,6 +107,21 @@ export class CategoriesListComponent implements OnInit {
     this.categoryService.getAll({ page: this.page(), limit: this.limit() }).subscribe(res => {
       this.categories.set(res.data);
       this.total.set(res.meta.total);
+    });
+  }
+
+  exportAsXLSX(): void {
+    this.tableExportService.exportRows({
+      rows$: this.categoryService.getAllUnpaginated(),
+      fileName: 'categorias',
+      mapRow: (c) => ({
+        Id: c.id,
+        Nombre: c.name,
+        Descripción: c.description ?? '',
+        Estado: c.isActive ? 'Activo' : 'Inactivo'
+      }),
+      successMessage: 'Categorías exportadas correctamente.',
+      errorMessage: 'No se pudieron exportar las categorías.'
     });
   }
 

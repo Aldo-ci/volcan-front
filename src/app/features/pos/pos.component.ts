@@ -5,6 +5,8 @@ import { Product, ProductService } from '../products/product.service';
 import { PosService } from './pos.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { CurrencyPipe, NgOptimizedImage } from '@angular/common';
+import { ReceiptPrintService } from '../sales/receipt-print.service';
+import { Sale, SaleService } from '../sales/sale.service';
 
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -154,6 +156,8 @@ export class PosComponent implements OnInit {
   private readonly productService = inject(ProductService);
   readonly posService = inject(PosService);
   private readonly toast = inject(ToastService);
+  private readonly receiptPrintService = inject(ReceiptPrintService);
+  private readonly saleService = inject(SaleService);
 
   searchControl = new FormControl('');
   discountControl = new FormControl(0);
@@ -193,13 +197,13 @@ export class PosComponent implements OnInit {
   checkout() {
     this.isProcessing.set(true);
     this.posService.checkout().subscribe({
-      next: () => {
-        this.toast.success('Venta registrada con éxito.');
+      next: (sale) => {
         this.posService.clearCart();
         this.discountControl.setValue(0);
         this.isProcessing.set(false);
         // Reload products to get updated stock
         this.loadProducts(this.searchControl.value || '');
+        this.printCreatedSale(sale);
       },
       error: (err) => {
         this.isProcessing.set(false);
@@ -208,6 +212,31 @@ export class PosComponent implements OnInit {
         } else {
           this.toast.error('Ocurrió un error al procesar la venta.');
         }
+      }
+    });
+  }
+
+  private printCreatedSale(sale: Sale): void {
+    const printSale = (saleToPrint: Sale) => {
+      this.receiptPrintService.printSale(saleToPrint).subscribe({
+        next: () => {
+          this.toast.success('Venta registrada e impresa con éxito.');
+        },
+        error: () => {
+          this.toast.warning('Venta registrada, pero no se pudo imprimir el ticket.');
+        }
+      });
+    };
+
+    if (sale.items?.length) {
+      printSale(sale);
+      return;
+    }
+
+    this.saleService.getById(sale.id).subscribe({
+      next: printSale,
+      error: () => {
+        this.toast.warning('Venta registrada, pero no se pudo imprimir el ticket.');
       }
     });
   }

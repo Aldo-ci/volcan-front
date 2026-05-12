@@ -16,6 +16,15 @@ export class ToastService {
     });
   }
 
+  warning(message: string): void {
+    this.snackBar.open(message, 'Cerrar', {
+      duration: 5000,
+      panelClass: ['bg-amber-600', 'text-white'],
+      horizontalPosition: 'right',
+      verticalPosition: 'top'
+    });
+  }
+
   error(message: string): void {
     this.snackBar.open(message, 'Cerrar', {
       duration: 4000,
