@@ -1,7 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, take } from 'rxjs';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { Observable, take } from 'rxjs';
 import { ToastService } from './toast.service';
 
 export interface PdfExportOptions<T> {
@@ -26,34 +24,39 @@ export class PdfExportService {
         take(1),
       )
       .subscribe({
-        next: (rows) => {
+        next: async (rows) => {
           if (!rows.length) {
             this.toast.error(options.emptyMessage ?? 'No hay datos para exportar.');
             return;
           }
 
-          const doc = new jsPDF();
-          
-          // Add Title
-          doc.setFontSize(18);
-          doc.text(options.title, 14, 22);
-          
-          // Add Date
-          doc.setFontSize(11);
-          doc.setTextColor(100);
-          doc.text(`Fecha de generación: ${new Date().toLocaleString('es-MX')}`, 14, 30);
+          try {
+            const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+              import('jspdf'),
+              import('jspdf-autotable'),
+            ]);
+            const doc = new jsPDF();
 
-          // Generate Table
-          autoTable(doc, {
-            startY: 35,
-            head: [options.columns.map(col => col.header)],
-            body: rows.map(row => options.columns.map(col => col.data(row))),
-            styles: { fontSize: 9 },
-            headStyles: { fillColor: [63, 81, 181] }, // Indigo color to match theme
-          });
+            doc.setFontSize(18);
+            doc.text(options.title, 14, 22);
 
-          doc.save(`${this.withDateSuffix(options.fileName)}.pdf`);
-          this.toast.success(options.successMessage ?? 'Archivo PDF exportado correctamente.');
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            doc.text(`Fecha de generación: ${new Date().toLocaleString('es-MX')}`, 14, 30);
+
+            autoTable(doc, {
+              startY: 35,
+              head: [options.columns.map(col => col.header)],
+              body: rows.map(row => options.columns.map(col => col.data(row))),
+              styles: { fontSize: 9 },
+              headStyles: { fillColor: [63, 81, 181] },
+            });
+
+            doc.save(`${this.withDateSuffix(options.fileName)}.pdf`);
+            this.toast.success(options.successMessage ?? 'Archivo PDF exportado correctamente.');
+          } catch {
+            this.toast.error(options.errorMessage ?? 'No se pudo exportar la información a PDF.');
+          }
         },
         error: () => {
           this.toast.error(options.errorMessage ?? 'No se pudo exportar la información a PDF.');

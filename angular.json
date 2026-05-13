@@ -23,6 +23,13 @@
             ],
             "styles": [
               "src/styles.css"
+            ],
+            "allowedCommonJsDependencies": [
+              "canvg",
+              "core-js",
+              "html2canvas",
+              "raf",
+              "rgbcolor"
             ]
           },
           "configurations": {
@@ -30,7 +37,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "800kB",
                   "maximumError": "1MB"
                 },
                 {
