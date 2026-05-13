@@ -44,17 +44,17 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
             (keydown.enter)="handleSearchEnter($event)" />
         </mat-form-field>
 
-        <div class="flex-1 overflow-auto grid grid-cols-3 gap-4 pb-4">
+        <div class="flex-1 overflow-auto grid grid-cols-3 auto-rows-[220px] gap-4 pb-4">
           @for (product of products(); track product.id) {
-            <mat-card class="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden" (click)="addToCart(product)">
-              <div class="h-32 bg-gray-50 flex items-center justify-center relative overflow-hidden border-b border-gray-100 p-2">
+            <mat-card class="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden h-[220px]" (click)="addToCart(product)">
+              <div class="h-32 min-h-32 bg-gray-50 flex items-center justify-center relative overflow-hidden border-b border-gray-100 p-2">
                 @if (hasProductImage(product)) {
                   <img [ngSrc]="product.imageUrl!" fill class="object-contain p-2" [alt]="product.name" (error)="markImageAsFailed(product.imageUrl)">
                 } @else {
                   <mat-icon class="!text-gray-300 !text-5xl !w-12 !h-12">image</mat-icon>
                 }
               </div>
-              <mat-card-content class="!p-3 flex flex-col items-center justify-center text-center h-full">
+              <mat-card-content class="!p-3 flex flex-col items-center justify-center text-center h-[92px]">
                 <div class="font-bold text-gray-800 text-sm mb-1 line-clamp-1">{{ product.name }}</div>
                 <div class="font-medium text-indigo-600">{{ product.salePrice | currency }}</div>
                 <div class="text-[10px] text-gray-400 mt-1">Stock: {{ product.stockQuantity }}</div>
