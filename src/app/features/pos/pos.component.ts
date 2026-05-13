@@ -37,7 +37,11 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Buscar producto (Nombre o Código)</mat-label>
           <mat-icon matPrefix>search</mat-icon>
-          <input matInput [formControl]="searchControl" placeholder="Ej. Camiseta" />
+          <input
+            matInput
+            [formControl]="searchControl"
+            placeholder="Ej. Camiseta"
+            (keydown.enter)="handleSearchEnter($event)" />
         </mat-form-field>
 
         <div class="flex-1 overflow-auto grid grid-cols-3 gap-4 pb-4">
@@ -147,7 +151,31 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
             <span class="text-2xl font-bold text-indigo-600">{{ posService.total() | currency }}</span>
           </div>
 
-          <button mat-flat-button color="primary" class="w-full !h-12 !text-lg" [disabled]="cartItems().length === 0 || isProcessing()" (click)="checkout()">
+          <div class="flex items-center gap-2 mb-3">
+            <mat-form-field appearance="outline" class="w-full !mb-[-1.25em]">
+              <mat-label>Dinero recibido ($)</mat-label>
+              <input matInput type="number" min="0" [formControl]="cashReceivedControl" />
+            </mat-form-field>
+          </div>
+
+          <div
+            class="flex justify-between items-center mb-4 rounded border px-3 py-2 text-sm font-semibold"
+            [class.border-emerald-200]="!hasInsufficientCash()"
+            [class.bg-emerald-50]="!hasInsufficientCash()"
+            [class.text-emerald-700]="!hasInsufficientCash()"
+            [class.border-red-200]="hasInsufficientCash()"
+            [class.bg-red-50]="hasInsufficientCash()"
+            [class.text-red-700]="hasInsufficientCash()">
+            @if (hasInsufficientCash()) {
+              <span>Faltan</span>
+              <span>{{ cashMissing() | currency }}</span>
+            } @else {
+              <span>Cambio</span>
+              <span>{{ changeDue() | currency }}</span>
+            }
+          </div>
+
+          <button mat-flat-button color="primary" class="w-full !h-12 !text-lg" [disabled]="isCheckoutDisabled()" (click)="checkout()">
             Cobrar
           </button>
         </div>
@@ -164,7 +192,8 @@ export class PosComponent implements OnInit {
   private readonly saleService = inject(SaleService);
 
   searchControl = new FormControl('');
-  discountControl = new FormControl(0);
+  discountControl = new FormControl<number | null>(null);
+  cashReceivedControl = new FormControl<number | null>(null);
   
   products = signal<Product[]>([]);
   isProcessing = signal(false);
@@ -186,7 +215,8 @@ export class PosComponent implements OnInit {
 
     // Reset cart on init
     this.posService.clearCart();
-    this.discountControl.setValue(0, { emitEvent: false });
+    this.discountControl.setValue(null, { emitEvent: false });
+    this.cashReceivedControl.setValue(null, { emitEvent: false });
   }
 
   loadProducts(search: string) {
@@ -197,6 +227,35 @@ export class PosComponent implements OnInit {
 
   addToCart(product: Product) {
     this.posService.addToCart(product);
+  }
+
+  handleSearchEnter(event: Event): void {
+    event.preventDefault();
+
+    const scannedCode = this.normalizeBarcode(this.searchControl.value);
+    if (!scannedCode) return;
+
+    const loadedProduct = this.products().find(product => this.matchesBarcode(product, scannedCode));
+    if (loadedProduct) {
+      this.addScannedProduct(loadedProduct);
+      return;
+    }
+
+    this.productService.getAll({ search: scannedCode, isActive: true, limit: 50 }).subscribe({
+      next: (res) => {
+        const product = res.data.find(item => this.matchesBarcode(item, scannedCode));
+
+        if (!product) {
+          this.toast.error('No se encontró un producto con ese código de barras.');
+          return;
+        }
+
+        this.addScannedProduct(product);
+      },
+      error: () => {
+        this.toast.error('No se pudo buscar el producto escaneado.');
+      }
+    });
   }
 
   hasProductImage(product: Product): boolean {
@@ -211,12 +270,61 @@ export class PosComponent implements OnInit {
     this.failedImageUrls.update(urls => new Set(urls).add(normalizedUrl));
   }
 
+  cashReceived(): number {
+    return Number(this.cashReceivedControl.value) || 0;
+  }
+
+  cashMissing(): number {
+    return Math.max(0, this.posService.total() - this.cashReceived());
+  }
+
+  changeDue(): number {
+    if (this.cartItems().length === 0 || this.posService.total() === 0) {
+      return 0;
+    }
+
+    return Math.max(0, this.cashReceived() - this.posService.total());
+  }
+
+  hasInsufficientCash(): boolean {
+    return this.cartItems().length > 0 && this.cashReceived() < this.posService.total();
+  }
+
+  isCheckoutDisabled(): boolean {
+    return this.cartItems().length === 0 || this.isProcessing() || this.hasInsufficientCash();
+  }
+
+  private addScannedProduct(product: Product): void {
+    this.addToCart(product);
+    this.searchControl.setValue('', { emitEvent: false });
+    this.loadProducts('');
+  }
+
+  private matchesBarcode(product: Product, barcode: string): boolean {
+    return (
+      this.normalizeBarcode(product.barcode) === barcode ||
+      this.normalizeBarcode(product.legacyCodigoBarras) === barcode
+    );
+  }
+
+  private normalizeBarcode(value: string | null | undefined): string {
+    return value?.trim() ?? '';
+  }
+
   checkout() {
+    if (this.isCheckoutDisabled()) {
+      if (this.hasInsufficientCash()) {
+        this.toast.error('El dinero recibido es menor al total de la venta.');
+      }
+      return;
+    }
+
     this.isProcessing.set(true);
     this.posService.checkout().subscribe({
       next: (sale) => {
         this.posService.clearCart();
-        this.discountControl.setValue(0);
+        this.discountControl.setValue(null);
+        this.cashReceivedControl.setValue(null);
         this.isProcessing.set(false);
         // Reload products to get updated stock
         this.loadProducts(this.searchControl.value || '');
