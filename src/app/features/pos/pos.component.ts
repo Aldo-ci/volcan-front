@@ -44,8 +44,8 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
           @for (product of products(); track product.id) {
             <mat-card class="cursor-pointer hover:shadow-lg transition-shadow overflow-hidden" (click)="addToCart(product)">
               <div class="h-32 bg-gray-50 flex items-center justify-center relative overflow-hidden border-b border-gray-100 p-2">
-                @if (product.imageUrl) {
-                  <img [ngSrc]="product.imageUrl" fill class="object-contain p-2" [alt]="product.name">
+                @if (hasProductImage(product)) {
+                  <img [ngSrc]="product.imageUrl!" fill class="object-contain p-2" [alt]="product.name" (error)="markImageAsFailed(product.imageUrl)">
                 } @else {
                   <mat-icon class="!text-gray-300 !text-5xl !w-12 !h-12">image</mat-icon>
                 }
@@ -74,9 +74,13 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
           @for (item of cartItems(); track item.product.id) {
             <div class="flex flex-col gap-2 p-3 border border-gray-200 rounded bg-gray-50">
               <div class="flex gap-3">
-                @if (item.product.imageUrl) {
+                @if (hasProductImage(item.product)) {
                   <div class="w-12 h-12 rounded border border-gray-200 overflow-hidden flex-shrink-0 relative bg-white p-1">
-                    <img [ngSrc]="item.product.imageUrl" fill class="object-contain p-1" [alt]="item.product.name">
+                    <img [ngSrc]="item.product.imageUrl!" fill class="object-contain p-1" [alt]="item.product.name" (error)="markImageAsFailed(item.product.imageUrl)">
+                  </div>
+                } @else {
+                  <div class="w-12 h-12 rounded border border-gray-200 flex items-center justify-center flex-shrink-0 bg-white">
+                    <mat-icon class="!text-gray-300">image</mat-icon>
                   </div>
                 }
                 <div class="flex-1 min-w-0">
@@ -164,6 +168,7 @@ export class PosComponent implements OnInit {
   
   products = signal<Product[]>([]);
   isProcessing = signal(false);
+  failedImageUrls = signal<Set<string>>(new Set());
 
   cartItems = this.posService.cartItems;
 
@@ -192,6 +197,18 @@ export class PosComponent implements OnInit {
 
   addToCart(product: Product) {
     this.posService.addToCart(product);
+  }
+
+  hasProductImage(product: Product): boolean {
+    const imageUrl = product.imageUrl?.trim();
+    return !!imageUrl && !this.failedImageUrls().has(imageUrl);
+  }
+
+  markImageAsFailed(imageUrl: string | null): void {
+    const normalizedUrl = imageUrl?.trim();
+    if (!normalizedUrl) return;
+
+    this.failedImageUrls.update(urls => new Set(urls).add(normalizedUrl));
   }
 
   checkout() {
